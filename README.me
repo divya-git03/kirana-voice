@@ -1,0 +1,82 @@
+# 🛒 Kirana Voice
+
+**Hinglish phone orders for neighbourhood stores.** Say *"bhaiya, do kilo chawal aur ek packet maggi"* and hear a priced order read back, then confirm with "haan".
+
+Built for the **Great Indian AI Internship Challenge** on Gnani AI's own models.
+
+**▶ Demo (60s):** <paste your LinkedIn / X post link>
+
+![demo screenshot](docs/screenshot.png)
+
+**Awards targeted:** Mixed Vibes · Real Deal · Noise Canceller · Solo Ninja
+
+## The problem
+Kirana stores take many orders by phone, in code-mixed Hindi-English. The owner is busy at the counter, so orders get missed or misheard. Kirana Voice answers the call, understands the order, reads it back with the price, and waits for confirmation.
+
+## Gnani AI models used
+| Model | Role |
+|---|---|
+| **Prisma v3.0** (speech-to-text, `indic-auto`) | Transcribes Hindi, Hinglish and Devanagari speech with automatic language detection |
+| **Timbre v2.5** (text-to-speech) | Speaks the order read-back and total; also generates the synthetic test calls |
+
+## How it works
+```mermaid
+flowchart LR
+    A[Caller audio] --> B[Prisma v3.0 STT]
+    B --> C[Hinglish order parser]
+    C --> D[Basket + prices]
+    D --> E[Hinglish reply]
+    E --> F[Timbre v2.5 TTS]
+    F --> G[Caller hears order]
+```
+
+The parser (`kirana_voice/parser.py`) is deterministic and works offline. It handles:
+- Roman and Devanagari spellings (*chawal* / चावल)
+- Number words: *ek, do, dedh, dhai, aadha, paav*
+- Units: *kilo, gram, litre, packet, dozen*
+- Quantity before or after the item (*"do kilo chawal"* / *"chawal do kilo"*)
+- Multi-turn baskets with confirm and cancel
+
+13 unit tests cover these cases.
+
+## Quick start
+```bash
+pip install -r requirements.txt
+export GNANI_API_KEY=your_key        # get one at app.gnani.ai/voice
+                                     # Windows PowerShell: $env:GNANI_API_KEY="your_key"
+
+python -m pytest                     # offline parser tests
+python -m kirana_voice.cli --text "do kilo chawal aur ek packet maggi" --text "haan"
+python -m kirana_voice.cli call1.wav --speak     # real audio in, spoken reply in out/
+uvicorn kirana_voice.server:app --reload         # HTTP API, docs at /docs
+```
+Change the reply voice with `GNANI_VOICE` and `GNANI_LANG` (default `Nalini` / `hi-IN`).
+
+## Noise robustness
+Tested on **synthetic** calls only (generated with Timbre, no real recordings or personal data), degraded to 8 kHz telephony audio with background noise.
+
+```bash
+python scripts/make_synthetic_calls.py
+python scripts/add_noise.py samples/clean samples/noisy --snr 10
+python scripts/benchmark.py samples/clean samples/noisy
+```
+
+| Set | Calls | Exact order | Item recall |
+|---|---|---|---|
+| Clean 16 kHz | | | |
+| Noisy 8 kHz, 10 dB SNR | | | |
+
+## Project layout
+```
+kirana_voice/   gnani.py (API client) · parser.py · assistant.py · cli.py · server.py
+scripts/        make_synthetic_calls.py · add_noise.py · benchmark.py
+samples/        orders.json (test phrases and expected orders)
+tests/          test_parser.py
+```
+
+## Contributions
+Solo build by Divya: design, parser, API integration, server, evaluation and demo.
+
+## Limitations
+- The catalogue has 16 synthetic items, and matching is alias-based. New items go in `catalog.py`.
+- REST speech-to-text accepts up to 30 seconds per turn. A production version would use the WebSocket stream for lower latency and interruptions.
