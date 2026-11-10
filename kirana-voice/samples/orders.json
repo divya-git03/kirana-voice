@@ -1,0 +1,10 @@
+[
+  {"say": "do kilo chawal aur ek packet maggi", "expect": {"rice": [2, "kg"], "maggi": [1, "pack"]}},
+  {"say": "aadha kilo cheeni aur ek litre doodh", "expect": {"sugar": [0.5, "kg"], "milk": [1, "l"]}},
+  {"say": "teen packet biscuit aur ek sabun", "expect": {"biscuit": [3, "pack"], "soap": [1, "piece"]}},
+  {"say": "ek dozen ande aur dedh kilo pyaz", "expect": {"eggs": [12, "piece"], "onion": [1.5, "kg"]}},
+  {"say": "paanch kilo atta aur ek litre tel", "expect": {"atta": [5, "kg"], "oil": [1, "l"]}},
+  {"say": "do kilo aloo aur ek packet chai patti", "expect": {"potato": [2, "kg"], "tea": [1, "pack"]}},
+  {"say": "ek kilo dal aur do packet namak", "expect": {"dal": [1, "kg"], "salt": [2, "pack"]}},
+  {"say": "ek bread aur ek packet haldi", "expect": {"bread": [1, "pack"], "haldi": [1, "pack"]}}
+]
